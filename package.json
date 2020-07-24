@@ -1,0 +1,21 @@
+{
+  "name": "wasm-ts-cli",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/inquirer": "^7.3.0",
+    "@types/node": "^14.0.25",
+    "inquirer": "^7.3.3",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.7"
+  },
+  "scripts": {
+    "start": "ts-node index.ts",
+    "build": "tsc index.ts",
+    "try": "rm -rf wasm-ts-cli && yarn start"
+  },
+  "dependencies": {
+    "tslint": "^6.1.2"
+  }
+}
