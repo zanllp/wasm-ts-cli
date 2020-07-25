@@ -1,6 +1,6 @@
 ![](https://img.shields.io/npm/v/wasm-ts-cli.svg)
 # wasm-ts-cli
-* 快速创建ts调用c++ wasm项目原型的cli
+快速创建ts调用c++ wasm项目原型的cli
 # 用法 
 最基本的hello world，演示了函数调用及传参。
 
