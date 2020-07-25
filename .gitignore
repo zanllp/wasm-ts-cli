@@ -1,4 +1,5 @@
 /node_modules
 yarn.lock
 *.js
-/wasm-ts-cli
+/playground
+/bin
