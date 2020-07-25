@@ -132,7 +132,7 @@ extern "C"
 
 const buildCppFile = `
 cd emsdk  
-source emsdk_env.sh
+. emsdk_env.sh
 cd ../
 em++ -o3 src/main.cpp \\
 --bind \\
