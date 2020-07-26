@@ -1,5 +1,6 @@
 ![](https://img.shields.io/npm/v/wasm-ts-cli.svg)
 [![install size](https://packagephobia.com/badge?p=wasm-ts-cli)](https://packagephobia.com/result?p=wasm-ts-cli)
+![](https://github.com/zanllp/wasm-ts-cli/workflows/build/badge.svg)
 
 # wasm-ts-cli
 快速创建ts调用c++ wasm项目原型的cli
