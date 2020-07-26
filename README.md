@@ -4,14 +4,14 @@
 # wasm-ts-cli
 快速创建ts调用c++ wasm项目原型的cli
 # 用法 
-最基本的hello world，演示了函数调用及传参。
+按下面步骤会创建最基本的hello world，演示了函数调用及传参。
 
 安装clang，node，yarn。然后
 ```sh
 yarn global add wasm-ts-cli
 mkdir wasm-example
 cd wasm-example
-wasm-ts-cli
+wasm-ts-cli # 跟随cli进行项目初始化信息输入
 yarn start
 ```
 # todo
