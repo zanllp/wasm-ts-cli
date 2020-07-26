@@ -18,6 +18,10 @@ jobs:
       with:
         node-version: '12.x'
     - name: 下载依赖
-      run: npm i
+      run: |
+        cd ../
+        npm i
     - name: 编译
-      run: npm run build
+      run: |
+        cd ../
+        npm run build
