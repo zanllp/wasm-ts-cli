@@ -17,6 +17,9 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
+    - run: |
+        ls
+        pwd
     - name: 下载依赖
       run: |
         cd ../
