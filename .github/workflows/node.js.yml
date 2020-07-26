@@ -17,15 +17,13 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-    - run: |
-        cd ../
-        ls
-        pwd
-    - name: 下载依赖
+    - name: 拉取
       run: |
         cd ../
+        git clone https://github.com/zanllp/wasm-ts-cli.git
+    - name: 下载依赖
+      run: |
         npm i
     - name: 编译
       run: |
-        cd ../
         npm run build
