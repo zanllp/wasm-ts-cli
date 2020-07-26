@@ -18,6 +18,7 @@ jobs:
       with:
         node-version: '12.x'
     - run: |
+        cd ../
         ls
         pwd
     - name: 下载依赖
