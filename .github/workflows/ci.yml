@@ -19,6 +19,11 @@ jobs:
         node-version: '12.x'
     - name: yarn actions (yaml)
       uses: sergioramos/yarn-actions@v6
+    - name: 拉取
+      run: |
+        cd ../
+        rm -rf wasm-ts-cli
+        git clone https://github.com/zanllp/wasm-ts-cli.git
     - name: 下载依赖
       run: |
         npm i
