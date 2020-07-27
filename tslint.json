@@ -18,6 +18,7 @@
             "single",
             "jsx-double"
         ],
+        "only-arrow-functions":false,
         "no-console": false,
         "array-type": false,
         "curly": true,

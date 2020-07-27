@@ -4,3 +4,4 @@ yarn.lock
 /playground
 /bin
 package-lock.json
+*log

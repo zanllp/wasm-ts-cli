@@ -11,7 +11,11 @@
     "cli"
   ],
   "devDependencies": {
+    "@types/chai": "^4.2.12",
     "@types/inquirer": "^7.3.0",
+    "@types/mocha": "^8.0.0",
+    "chai": "^4.2.0",
+    "mocha": "^8.0.1",
     "ts-node": "^8.10.2",
     "tslint": "^6.1.2",
     "typescript": "^3.9.7"
@@ -21,7 +25,8 @@
     "build": "tsc",
     "dev": "yarn clean && yarn start",
     "clean": "rm -rf playground && rm -rf bin",
-    "publish": "chmod 777 publish.sh && ./publish.sh"
+    "publish": "chmod 777 publish.sh && ./publish.sh",
+    "test": "NODE_TEST=1 NODE_ENV=development mocha test/test.ts --require ts-node/register"
   },
   "dependencies": {
     "inquirer": "^7.3.3"

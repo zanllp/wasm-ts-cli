@@ -11,3 +11,4 @@ yarn.lock
 doc
 playground
 publish.sh
+*log

@@ -5,14 +5,15 @@ import { prompt, ui as UI } from 'inquirer';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as process from 'process';
-const dev = process.env.NODE_ENV === 'development';
-const playgroundDir = 'playground';
+const DEV = process.env.NODE_ENV === 'development';
+const TEST = !!process.env.NODE_TEST;
+export const playgroundDir = 'playground';
 const questions = [
   {
     type: 'input',
     name: 'name',
     message: '项目名称',
-    default: path.parse(dev ? playgroundDir : execSync('pwd').toString().trim())
+    default: path.parse(DEV ? playgroundDir : execSync('pwd').toString().trim())
       .name,
   },
   {
@@ -23,15 +24,12 @@ const questions = [
     default: 32,
   },
 ];
-Promise.resolve().then(async () => {
-  if (dev) {
-    console.log(`开发时在${playgroundDir}文件夹下`);
-    execSync(`mkdir ${playgroundDir}`);
-  }
-  const { target, name } = (await prompt(questions)) as {
-    target: 32 | 64;
-    name: string;
-  };
+interface IAnswer {
+  target: 32 | 64;
+  name: string;
+}
+export const main = async (answer: IAnswer) => {
+  const { target, name } = answer;
   let cmd = exec(
     `
         echo "安装emsdk"
@@ -39,19 +37,19 @@ Promise.resolve().then(async () => {
         cd emsdk
         git pull
         ./emsdk install ${
-          target === 64 ? 'sdk-upstream-master-64bit' : 'latest'
-        }
+    target === 64 ? 'sdk-upstream-master-64bit' : 'latest'
+    }
         ./emsdk activate ${
-          target === 64 ? 'sdk-upstream-master-64bit' : 'latest'
-        }
+    target === 64 ? 'sdk-upstream-master-64bit' : 'latest'
+    }
     `,
     {
-      cwd: dev ? playgroundDir : void 0,
+      cwd: DEV ? playgroundDir : void 0,
     }
   );
-  const startPath = dev ? playgroundDir : '';
+  const startPath = DEV ? playgroundDir : '';
   await waitCurrCmdEnd(cmd);
-  fs.writeFileSync(path.join(startPath,'package.json'), packageJson(name));
+  fs.writeFileSync(path.join(startPath, 'package.json'), packageJson(name));
   cmd = exec(`
         echo "初始化ts"
         yarn add ts-node typescript @types/node @types/emscripten
@@ -59,31 +57,43 @@ Promise.resolve().then(async () => {
         mkdir src
     `,
     {
-      cwd: dev ? playgroundDir : void 0,
+      cwd: DEV ? playgroundDir : void 0,
     });
   await waitCurrCmdEnd(cmd);
-  fs.writeFileSync(path.join(startPath,'src', 'main.cpp'), initCppFile);
-  fs.writeFileSync(path.join(startPath,'src', 'index.ts'), initTsFile);
-  fs.writeFileSync(path.join(startPath,'src', 'main.d.ts'), initTsDeclearFile);
-  fs.writeFileSync(path.join(startPath,'build-cpp.sh'), buildCppFile);
+  fs.writeFileSync(path.join(startPath, 'src', 'main.cpp'), initCppFile);
+  fs.writeFileSync(path.join(startPath, 'src', 'index.ts'), initTsFile);
+  fs.writeFileSync(path.join(startPath, 'src', 'main.d.ts'), initTsDeclearFile);
+  fs.writeFileSync(path.join(startPath, 'build-cpp.sh'), buildCppFile);
   console.log();
   console.log('安装完成！尝试 yarn start');
-  process.exit();
+};
+
+Promise.resolve().then(async () => {
+  if (DEV && !TEST) {
+    console.log(`开发\\测试时在${playgroundDir}文件夹下`);
+    execSync(`mkdir ${playgroundDir}`);
+  }
+  if (!TEST) {
+    main(await prompt(questions));
+    process.exit();
+  }
 });
 
 const waitCurrCmdEnd = (cmd: ChildProcess) => {
-  const loader = [
-    '/ Installing',
-    '| Installing',
-    '\\ Installing',
-    '- Installing',
-  ];
-  let i = 4;
-  const ui = new UI.BottomBar({ bottomBar: loader[i % 4] });
-  setInterval(() => {
-    ui.updateBottomBar(loader[i++ % 4]);
-  }, 300);
-  cmd.stdout!.pipe(ui.log);
+  if (!TEST) {
+    const loader = [
+      '/ Installing',
+      '| Installing',
+      '\\ Installing',
+      '- Installing',
+    ];
+    let i = 4;
+    const ui = new UI.BottomBar({ bottomBar: loader[i % 4] });
+    setInterval(() => {
+      ui.updateBottomBar(loader[i++ % 4]);
+    }, 300);
+    cmd.stdout!.pipe(ui.log);
+  }
   return new Promise((resolve) => {
     cmd.on('close', () => {
       resolve();
@@ -110,7 +120,7 @@ const packageJson = (name: string) =>
     4
   );
 
-const initTsFile = `
+export const initTsFile = `
 import Module, { modType } from './main';
 const fetchModule = Module;
 let m: modType;
@@ -126,7 +136,7 @@ Promise.resolve().then(async () => {
     console.log('lerp result: ' + m.lerp(1, 2, 0.5));
 });
 `;
-const initTsDeclearFile = `
+export const initTsDeclearFile = `
 import 'emscripten';
 export type modType = EmscriptenModule & {
     cwrap: typeof cwrap,
@@ -136,7 +146,7 @@ export type modType = EmscriptenModule & {
 declare const Module : () => Promise<modType>;
 export default Module;
 `;
-const initCppFile = `
+export const initCppFile = `
 #include <iostream>
 #include <emscripten/bind.h>
 
@@ -165,7 +175,7 @@ extern "C"
 }
 `;
 
-const buildCppFile = `
+export const buildCppFile = `
 cd emsdk
 . ./emsdk_env.sh
 cd ../
