@@ -22,7 +22,7 @@ yarn start
 ```
 ### 修改现有项目
 ```sh
-cd wasm-example // 移动至项目根目录下
+cd wasm-example # 移动至项目根目录下
 wasm-ts-cli # 跟随cli进行项目初始化信息输入
 yarn wasm-start
 ```
