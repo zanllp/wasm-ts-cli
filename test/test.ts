@@ -4,7 +4,7 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { assert } from 'chai';
 
-describe.skip('模拟32位项目的创建编译运行', function () {
+describe('模拟32位项目的创建编译运行', function () {
     before(function () {
         execSync(`
             yarn clean
