@@ -17,10 +17,7 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-    - name: 拉取
-      run: |
-        cd ../
-        git clone https://github.com/zanllp/wasm-ts-cli.git
+    - uses: actions/checkout@v2
     - name: 下载依赖
       run: |
         npm i
