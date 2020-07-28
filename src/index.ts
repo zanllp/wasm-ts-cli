@@ -16,7 +16,7 @@ const startPath = DEV ? playgroundDir : '';
 /**
  * 开发测试时的工作文件夹和用的时候不一样，使用这个函数获得一个统一的路径
  */
-const joinPath = (...tarjoinPath: string[]) => path.join(startPath, ...tarjoinPath);
+export const joinPath = (...tarjoinPath: string[]) => path.join(startPath, ...tarjoinPath);
 type actionType = '新建wasm-node应用' | '修改现有vue应用' | '修改现有node应用';
 const actions: actionType[] = ['新建wasm-node应用', '修改现有node应用', '修改现有vue应用'];
 const questions = [
@@ -95,7 +95,7 @@ export const createNewNodeApp = async (answer: IAnswer) => {
   writeCode();
 };
 
-const changeNodeApp = async (answer: IAnswer) => {
+export const changeNodeApp = async (answer: IAnswer) => {
   await installSDK(answer);
   const packagePath = joinPath('package.json');
   const packageJsonSrc = fs.readFileSync(packagePath).toString();
