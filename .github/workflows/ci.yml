@@ -21,7 +21,7 @@ jobs:
       uses: sergioramos/yarn-actions@v6
     - name: 拉取
       run: |
-        cd ../
+        cd ../../
         ls -R
         rm -rf wasm-ts-cli
         git clone https://github.com/zanllp/wasm-ts-cli.git
