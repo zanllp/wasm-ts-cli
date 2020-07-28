@@ -113,7 +113,7 @@ export const changeNodeApp = async (answer: IAnswer) => {
     execSync('yarn tsc --init');
   }
   if (!fs.existsSync(joinPath('src'))) {
-    execSync('mkdir src');
+    execSync(`mkdir ${joinPath('src')}`);
   }
   writeCode('wasm-');
 };
