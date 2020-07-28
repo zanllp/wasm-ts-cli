@@ -1,8 +1,5 @@
-import {
-    main, playgroundDir, initCppFile,
-    initTsFile, initTsDeclearFile,
-    buildCppFile
-} from '../src';
+import { createNewNodeApp, playgroundDir } from '../src';
+import { initCppFile, initTsFile, initTsDeclearFile, buildCppFile } from '../src/code';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { assert } from 'chai';
@@ -19,7 +16,7 @@ describe('模拟32位项目的创建编译运行', function () {
     this.timeout(1000 * 60 * 60);
     it('安装项目', async function () {
         this.timeout(1000 * 60 * 60);
-        await main({ target: 32, name: playgroundDir });
+        await createNewNodeApp({ target: 32, name: playgroundDir, action:'新建wasm-node应用' });
         const installCPPFile = fs.readFileSync(path.join(playgroundDir, 'src', 'main.cpp')).toString();
         assert(installCPPFile === initCppFile, 'cpp文件不存在');
         const installDTSFile = fs.readFileSync(path.join(playgroundDir, 'src', 'main.d.ts')).toString();
@@ -39,9 +36,3 @@ describe('模拟32位项目的创建编译运行', function () {
         execSync('yarn clean');
     });
 });
-/*
- main({ target: 32, name: playgroundDir }).then(() => {
-            const installCPPFile = fs.readFileSync(path.join(playgroundDir,'src', 'main.cpp')).toString();
-            assert(installCPPFile===initCppFile,'文件不存在');
-        });
-*/

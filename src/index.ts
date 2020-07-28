@@ -1,20 +1,40 @@
 #!/usr/bin/env node
 
-import { exec, ChildProcess, execSync } from 'child_process';
-import { prompt, ui as UI } from 'inquirer';
+import { exec, execSync } from 'child_process';
+import { prompt } from 'inquirer';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as process from 'process';
-const DEV = process.env.NODE_ENV === 'development';
-const TEST = !!process.env.NODE_TEST;
+import {
+  packageJson, initTsDeclearFile, initCppFile, initTsFile, buildCppFile, changePackageJson
+} from './code';
+import { waitCurrCmdEndShowLoader } from './util';
+export const DEV = process.env.NODE_ENV === 'development';
+export const TEST = !!process.env.NODE_TEST;
 export const playgroundDir = 'playground';
+const startPath = DEV ? playgroundDir : '';
+/**
+ * 开发测试时的工作文件夹和用的时候不一样，使用这个函数获得一个统一的路径
+ */
+const joinPath = (...tarjoinPath: string[]) => path.join(startPath, ...tarjoinPath);
+type actionType = '新建wasm-node应用' | '修改现有vue应用' | '修改现有node应用';
+const actions: actionType[] = ['新建wasm-node应用', '修改现有node应用', '修改现有vue应用'];
 const questions = [
+  {
+    type: 'list',
+    name: 'action',
+    message: '需要进行哪个操作',
+    choices: actions,
+    default: actions[0],
+  },
   {
     type: 'input',
     name: 'name',
     message: '项目名称',
-    default: path.parse(DEV ? playgroundDir : execSync('pwd').toString().trim())
-      .name,
+    default: path.parse(DEV ? playgroundDir : execSync('pwd').toString().trim()).name,
+    when(answers: IAnswer) {
+      return answers.action === '新建wasm-node应用';
+    }
   },
   {
     type: 'list',
@@ -27,30 +47,42 @@ const questions = [
 interface IAnswer {
   target: 32 | 64;
   name: string;
+  action: actionType;
 }
-export const main = async (answer: IAnswer) => {
-  const { target, name } = answer;
-  let cmd = exec(
+const installSDK = async (answer: IAnswer) => {
+  const { target } = answer;
+  const cmd = exec(
     `
         echo "安装emsdk"
         git clone https://github.com/emscripten-core/emsdk.git
         cd emsdk
         git pull
-        ./emsdk install ${
-    target === 64 ? 'sdk-upstream-master-64bit' : 'latest'
+        ./emsdk install sdk-${
+    target === 64 ? 'upstream-master-64bit' : 'latest'
     }
-        ./emsdk activate ${
-    target === 64 ? 'sdk-upstream-master-64bit' : 'latest'
+        ./emsdk activate sdk-${
+    target === 64 ? 'upstream-master-64bit' : 'latest'
     }
     `,
     {
       cwd: DEV ? playgroundDir : void 0,
     }
   );
-  const startPath = DEV ? playgroundDir : '';
-  await waitCurrCmdEnd(cmd);
-  fs.writeFileSync(path.join(startPath, 'package.json'), packageJson(name));
-  cmd = exec(`
+  await waitCurrCmdEndShowLoader(cmd);
+};
+
+const writeCode = (prefixe?: string) => {
+  fs.writeFileSync(joinPath('src', 'main.cpp'), initCppFile);
+  fs.writeFileSync(joinPath('src', prefixe ? `${prefixe}index.ts` : 'index.ts'), initTsFile);
+  fs.writeFileSync(joinPath('src', 'main.d.ts'), initTsDeclearFile);
+  fs.writeFileSync(joinPath('build-cpp.sh'), buildCppFile);
+};
+
+export const createNewNodeApp = async (answer: IAnswer) => {
+  const { name } = answer;
+  await installSDK(answer);
+  fs.writeFileSync(joinPath('package.json'), packageJson(name));
+  const cmd = exec(`
         echo "初始化ts"
         yarn add ts-node typescript @types/node @types/emscripten
         yarn tsc --init
@@ -59,13 +91,31 @@ export const main = async (answer: IAnswer) => {
     {
       cwd: DEV ? playgroundDir : void 0,
     });
-  await waitCurrCmdEnd(cmd);
-  fs.writeFileSync(path.join(startPath, 'src', 'main.cpp'), initCppFile);
-  fs.writeFileSync(path.join(startPath, 'src', 'index.ts'), initTsFile);
-  fs.writeFileSync(path.join(startPath, 'src', 'main.d.ts'), initTsDeclearFile);
-  fs.writeFileSync(path.join(startPath, 'build-cpp.sh'), buildCppFile);
-  console.log();
-  console.log('安装完成！尝试 yarn start');
+  await waitCurrCmdEndShowLoader(cmd);
+  writeCode();
+};
+
+const changeNodeApp = async (answer: IAnswer) => {
+  await installSDK(answer);
+  const packagePath = joinPath('package.json');
+  const packageJsonSrc = fs.readFileSync(packagePath).toString();
+  const resJson = changePackageJson(packageJsonSrc);
+  fs.writeFileSync(packagePath, resJson);
+  const cmd = exec(`
+        echo "初始化ts"
+        yarn add ts-node typescript @types/node @types/emscripten
+    `,
+    {
+      cwd: DEV ? playgroundDir : void 0,
+    });
+  await waitCurrCmdEndShowLoader(cmd);
+  if (!fs.existsSync(joinPath('tsconfig.json'))) {
+    execSync('yarn tsc --init');
+  }
+  if (!fs.existsSync(joinPath('src'))) {
+    execSync('mkdir src');
+  }
+  writeCode('wasm-');
 };
 
 Promise.resolve().then(async () => {
@@ -74,120 +124,28 @@ Promise.resolve().then(async () => {
     execSync(`mkdir ${playgroundDir}`);
   }
   if (!TEST) {
-    main(await prompt(questions));
+    const answer = await prompt(questions) as IAnswer;
+    try {
+      let startScript = 'start';
+      switch (answer.action) {
+        case '新建wasm-node应用':
+          await createNewNodeApp(answer);
+          break;
+        case '修改现有node应用':
+          await changeNodeApp(answer);
+          startScript = 'wasm-start';
+          break;
+        default:
+          throw new RangeError('不支持的行为');
+      }
+      console.log(`\n安装完成！尝试 yarn ${startScript}`);
+    } catch (error) {
+      console.error(error);
+      process.exit();
+    }
     process.exit();
   }
 });
 
-const waitCurrCmdEnd = (cmd: ChildProcess) => {
-  if (!TEST) {
-    const loader = [
-      '/ Installing',
-      '| Installing',
-      '\\ Installing',
-      '- Installing',
-    ];
-    let i = 4;
-    const ui = new UI.BottomBar({ bottomBar: loader[i % 4] });
-    setInterval(() => {
-      ui.updateBottomBar(loader[i++ % 4]);
-    }, 300);
-    cmd.stdout!.pipe(ui.log);
-  }
-  return new Promise((resolve) => {
-    cmd.on('close', () => {
-      resolve();
-    });
-  });
-};
-
-const packageJson = (name: string) =>
-  JSON.stringify(
-    {
-      name,
-      version: '1.0.0',
-      main: 'index.js',
-      license: 'MIT',
-      devDependencies: {},
-      scripts: {
-        start: 'yarn build-cpp && yarn start-ts',
-        'start-ts': 'ts-node src/index.ts',
-        'build-cpp': 'chmod 777 build-cpp.sh && ./build-cpp.sh',
-      },
-      dependencies: {},
-    },
-    null,
-    4
-  );
-
-export const initTsFile = `
-import Module, { modType } from './main';
-const fetchModule = Module;
-let m: modType;
-
-Promise.resolve().then(async () => {
-    m = await fetchModule();
-
-    const result = m.ccall('add_one', // name of C function
-        'number', // return type
-        ['number'], // argument types
-        [10]);
-    console.log(\`10 + 1 resuelt:\${result}\`);
-    console.log('lerp result: ' + m.lerp(1, 2, 0.5));
-});
-`;
-export const initTsDeclearFile = `
-import 'emscripten';
-export type modType = EmscriptenModule & {
-    cwrap: typeof cwrap,
-    ccall: typeof ccall,
-    lerp: (a:number,b:number,c:number)=>number,
-};
-declare const Module : () => Promise<modType>;
-export default Module;
-`;
-export const initCppFile = `
-#include <iostream>
-#include <emscripten/bind.h>
-
-#include <emscripten.h>
-using namespace std;
-using namespace emscripten;
-
-float lerp(float a, float b, float t)
-{
-    return (1 - t) * a + t * b;
-}
 
 
-EMSCRIPTEN_BINDINGS(my_module)
-{
-    emscripten::function("lerp", &lerp);
-}
-
-extern "C"
-{
-
-    int add_one(int a)
-    {
-        return a + 1;
-    }
-}
-`;
-
-export const buildCppFile = `
-cd emsdk
-. ./emsdk_env.sh
-cd ../
-em++ -o3 src/main.cpp \\
---bind \\
--std=c++17 \\
--s MODULARIZE \\
--s ALLOW_MEMORY_GROWTH=1 \\
--s EXPORTED_FUNCTIONS='["_add_one"]' \\
--s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap", "ccall"]' \\
--o src/main.js
-
-echo "compiled"
-
-`;
