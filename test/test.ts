@@ -53,7 +53,7 @@ describe('模拟32位项目修改现有node应用的创建编译运行', functio
         assert(installCPPFile === initCppFile, 'cpp文件不存在');
         const installDTSFile = fs.readFileSync(joinPath('src', 'main.d.ts')).toString();
         assert(installDTSFile === initTsDeclearFile, 'ts声明文件不存在');
-        const installTSFile = fs.readFileSync(joinPath('src', 'index.ts')).toString();
+        const installTSFile = fs.readFileSync(joinPath('src', 'wasm-index.ts')).toString();
         assert(installTSFile === initTsFile, 'ts文件不存在');
         const installBuildCPPFIle = fs.readFileSync(joinPath('build-cpp.sh')).toString();
         assert(installBuildCPPFIle === buildCppFile, 'cpp编译配置文件不存在');
