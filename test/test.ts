@@ -1,5 +1,5 @@
 import { createNewNodeApp, playgroundDir, joinPath, changeNodeApp } from '../src';
-import { initCppFile, initTsFile, initTsDeclearFile, buildCppFile, packageJson } from '../src/code';
+import { initCppFile, initTsFile, initTsDeclearFile, buildCppFile,} from '../src/code';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { assert } from 'chai';

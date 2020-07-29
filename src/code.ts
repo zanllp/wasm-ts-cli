@@ -73,6 +73,24 @@ echo "compiled"
 
 `;
 
+export interface IComplierConfig {
+    main: string;
+    std: 'c++11' | 'c++14' | 'c++2a' | 'c++17' | 'gnu++11' | 'gnu++14' | 'gnu++17' | 'gnu++2a';
+    allowMemoryGroth?: 1;
+    exportedFunctions: Array<string>;
+    extraExportedRuntimeMethods: Array<string>;
+    target: string;
+}
+
+const config: IComplierConfig = {
+    main: 'src/main.cpp',
+    std: 'c++17',
+    allowMemoryGroth: 1,
+    exportedFunctions: ['add_one'],
+    extraExportedRuntimeMethods: ['cwrap', 'ccall'],
+    target: 'src/main.js'
+};
+
 export const packageJson = (name: string) => JSON.stringify(
     {
         name,

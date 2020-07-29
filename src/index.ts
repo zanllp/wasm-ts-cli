@@ -6,7 +6,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as process from 'process';
 import {
-  packageJson, initTsDeclearFile, initCppFile, initTsFile, buildCppFile, changePackageJson
+  packageJson, initTsDeclearFile, initCppFile, initTsFile,
+  buildCppFile, changePackageJson
 } from './code';
 import { waitCurrCmdEndShowLoader } from './util';
 export const DEV = process.env.NODE_ENV === 'development';
@@ -84,7 +85,7 @@ export const createNewNodeApp = async (answer: IAnswer) => {
   fs.writeFileSync(joinPath('package.json'), packageJson(name));
   const cmd = exec(`
         echo "初始化ts"
-        yarn add ts-node typescript @types/node @types/emscripten
+        yarn add ts-node typescript @types/node @types/emscripten --dev
         yarn tsc --init
         mkdir src
     `,
@@ -103,7 +104,7 @@ export const changeNodeApp = async (answer: IAnswer) => {
   fs.writeFileSync(packagePath, resJson);
   const cmd = exec(`
         echo "初始化ts"
-        yarn add ts-node typescript @types/node @types/emscripten
+        yarn add ts-node typescript @types/node @types/emscripten --dev
     `,
     {
       cwd: DEV ? playgroundDir : void 0,
