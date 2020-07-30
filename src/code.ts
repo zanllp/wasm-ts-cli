@@ -57,38 +57,54 @@ extern "C"
 `;
 
 export const buildCppFile = `
-cd emsdk
-. ./emsdk_env.sh
-cd ../
-em++ -o3 src/main.cpp \\
---bind \\
--std=c++17 \\
--s MODULARIZE \\
--s ALLOW_MEMORY_GROWTH=1 \\
--s EXPORTED_FUNCTIONS='["_add_one"]' \\
--s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap", "ccall"]' \\
--o src/main.js
-
-echo "compiled"
-
+module.exports = {
+    main: 'src/main.cpp',
+    std: 'c++17',
+    allowMemoryGroth: 1,
+    exportedFunctions: ['add_one'],
+    extraExportedRuntimeMethods: ['cwrap', 'ccall'],
+    target: 'src/main.js',
+    optimizationLevel: 'o3'
+}
 `;
 
-export interface IComplierConfig {
+
+
+export interface ICompilerConfig {
     main: string;
     std: 'c++11' | 'c++14' | 'c++2a' | 'c++17' | 'gnu++11' | 'gnu++14' | 'gnu++17' | 'gnu++2a';
     allowMemoryGroth?: 1;
     exportedFunctions: Array<string>;
     extraExportedRuntimeMethods: Array<string>;
     target: string;
+    optimizationLevel: 'o1' | 'o2' | 'o3';
 }
 
-const config: IComplierConfig = {
+export const initConfig: ICompilerConfig = {
     main: 'src/main.cpp',
     std: 'c++17',
     allowMemoryGroth: 1,
     exportedFunctions: ['add_one'],
     extraExportedRuntimeMethods: ['cwrap', 'ccall'],
-    target: 'src/main.js'
+    target: 'src/main.js',
+    optimizationLevel: 'o3'
+};
+
+export const createCompilerCommand = (config: ICompilerConfig) => {
+    return `
+    cd emsdk
+    . ./emsdk_env.sh
+    cd ../
+    em++ -${config.optimizationLevel} ${config.main} \\
+    --bind \\
+    -std=${config.std} \\
+    -s MODULARIZE \\
+    ${config.allowMemoryGroth ? `-s ALLOW_MEMORY_GROWTH=${config.allowMemoryGroth} \\` : ''}
+    -s EXPORTED_FUNCTIONS='[${config.exportedFunctions.map(fn => `"_${fn}"`).join(',')}]' \\
+    -s EXTRA_EXPORTED_RUNTIME_METHODS='[${config.extraExportedRuntimeMethods.map(fn => `"${fn}"`).join(',')}]' \\
+    -o ${config.target}
+    echo "编译完成"
+    `;
 };
 
 export const packageJson = (name: string) => JSON.stringify(

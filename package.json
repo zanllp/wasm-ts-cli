@@ -29,6 +29,7 @@
     "test": "NODE_TEST=1 NODE_ENV=development mocha test/test.ts --require ts-node/register"
   },
   "dependencies": {
+    "commander": "^6.0.0",
     "inquirer": "^7.3.3"
   },
   "repository": {
