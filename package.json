@@ -23,12 +23,13 @@
   "scripts": {
     "start": "NODE_ENV=development ts-node src/index.ts",
     "build": "tsc",
-    "dev": "yarn clean && yarn start",
+    "dev": "NODE_ENV=development yarn clean && yarn build  && yarn start -i",
     "clean": "rm -rf playground && rm -rf bin",
     "publish": "chmod 777 publish.sh && ./publish.sh",
     "test": "NODE_TEST=1 NODE_ENV=development mocha test/test.ts --require ts-node/register"
   },
   "dependencies": {
+    "commander": "^6.0.0",
     "inquirer": "^7.3.3"
   },
   "repository": {

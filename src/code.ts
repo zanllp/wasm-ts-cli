@@ -1,3 +1,4 @@
+import { DEV } from './util';
 
 export const initTsFile = `
 import Module, { modType } from './main';
@@ -56,22 +57,59 @@ extern "C"
 }
 `;
 
-export const buildCppFile = `
-cd emsdk
-. ./emsdk_env.sh
-cd ../
-em++ -o3 src/main.cpp \\
---bind \\
--std=c++17 \\
--s MODULARIZE \\
--s ALLOW_MEMORY_GROWTH=1 \\
--s EXPORTED_FUNCTIONS='["_add_one"]' \\
--s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap", "ccall"]' \\
--o src/main.js
+export const wasmConfigFile = `
+module.exports = {
+    cpp: {
+        main: 'src/main.cpp',
+        std: 'c++17',
+        allowMemoryGroth: 1,
+        exportedFunctions: ['add_one'],
+        extraExportedRuntimeMethods: ['cwrap', 'ccall'],
+        target: 'src/main.js',
+        optimizationLevel: 'o3'
+    }
+}`;
 
-echo "compiled"
+export interface IConfig {
+    cpp: ICompilerConfig;
+}
 
-`;
+export interface ICompilerConfig {
+    main: string;
+    std: 'c++11' | 'c++14' | 'c++2a' | 'c++17' | 'gnu++11' | 'gnu++14' | 'gnu++17' | 'gnu++2a';
+    allowMemoryGroth?: 1;
+    exportedFunctions: Array<string>;
+    extraExportedRuntimeMethods: Array<string>;
+    target: string;
+    optimizationLevel: 'o1' | 'o2' | 'o3';
+}
+
+export const initConfig: ICompilerConfig = {
+    main: 'src/main.cpp',
+    std: 'c++17',
+    allowMemoryGroth: 1,
+    exportedFunctions: ['add_one'],
+    extraExportedRuntimeMethods: ['cwrap', 'ccall'],
+    target: 'src/main.js',
+    optimizationLevel: 'o3'
+};
+
+export const createCompilerCommand = (config: ICompilerConfig) => {
+    return `
+    cd emsdk
+    . ./emsdk_env.sh
+    cd ../
+    em++ -${config.optimizationLevel} ${config.main} \\
+    --bind \\
+    -std=${config.std} \\
+    -s MODULARIZE \\
+    ${config.allowMemoryGroth ? `-s ALLOW_MEMORY_GROWTH=${config.allowMemoryGroth} \\` : ''}
+    -s EXPORTED_FUNCTIONS='[${config.exportedFunctions.map(fn => `"_${fn}"`).join(',')}]' \\
+    -s EXTRA_EXPORTED_RUNTIME_METHODS='[${config.extraExportedRuntimeMethods.map(fn => `"${fn}"`).join(',')}]' \\
+    -o ${config.target}
+    echo "编译完成"
+    `;
+};
 
 export const packageJson = (name: string) => JSON.stringify(
     {
@@ -83,7 +121,7 @@ export const packageJson = (name: string) => JSON.stringify(
         scripts: {
             start: 'yarn build-cpp && yarn start-ts',
             'start-ts': 'ts-node src/index.ts',
-            'build-cpp': 'chmod 777 build-cpp.sh && ./build-cpp.sh',
+            'build-cpp': `${DEV ? 'node ../bin' : 'wasm-ts-cli'} -c`,
         },
         dependencies: {},
     },
@@ -96,7 +134,7 @@ export const changePackageJson = (src: string) => {
     obj.scripts = {
         'wasm-start': 'yarn wasm-build-cpp && yarn wasm-start-ts',
         'wasm-start-ts': 'ts-node src/wasm-index.ts',
-        'wasm-build-cpp': 'chmod 777 build-cpp.sh && ./build-cpp.sh',
+        'wasm-build-cpp': `${DEV ? 'node ../bin' : 'wasm-ts-cli'} -c`,
         ...obj.scripts
     };
     return JSON.stringify(obj, null, 4);
