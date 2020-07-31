@@ -1,3 +1,4 @@
+import { DEV } from './util';
 
 export const initTsFile = `
 import Module, { modType } from './main';
@@ -56,19 +57,22 @@ extern "C"
 }
 `;
 
-export const buildCppFile = `
+export const wasmConfigFile = `
 module.exports = {
-    main: 'src/main.cpp',
-    std: 'c++17',
-    allowMemoryGroth: 1,
-    exportedFunctions: ['add_one'],
-    extraExportedRuntimeMethods: ['cwrap', 'ccall'],
-    target: 'src/main.js',
-    optimizationLevel: 'o3'
+    cpp: {
+        main: 'src/main.cpp',
+        std: 'c++17',
+        allowMemoryGroth: 1,
+        exportedFunctions: ['add_one'],
+        extraExportedRuntimeMethods: ['cwrap', 'ccall'],
+        target: 'src/main.js',
+        optimizationLevel: 'o3'
+    }
+}`;
+
+export interface IConfig {
+    cpp: ICompilerConfig;
 }
-`;
-
-
 
 export interface ICompilerConfig {
     main: string;
@@ -117,7 +121,7 @@ export const packageJson = (name: string) => JSON.stringify(
         scripts: {
             start: 'yarn build-cpp && yarn start-ts',
             'start-ts': 'ts-node src/index.ts',
-            'build-cpp': 'chmod 777 build-cpp.sh && ./build-cpp.sh',
+            'build-cpp': `${DEV ? 'node ../bin' : 'wasm-ts-cli'} -c`,
         },
         dependencies: {},
     },
@@ -130,7 +134,7 @@ export const changePackageJson = (src: string) => {
     obj.scripts = {
         'wasm-start': 'yarn wasm-build-cpp && yarn wasm-start-ts',
         'wasm-start-ts': 'ts-node src/wasm-index.ts',
-        'wasm-build-cpp': 'chmod 777 build-cpp.sh && ./build-cpp.sh',
+        'wasm-build-cpp': `${DEV ? 'node ../bin' : 'wasm-ts-cli'} -c`,
         ...obj.scripts
     };
     return JSON.stringify(obj, null, 4);

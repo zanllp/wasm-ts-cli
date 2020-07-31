@@ -1,7 +1,7 @@
 import { playgroundDir, DEV, waitCurrCmdEndShowLoader, joinPath } from './util';
 import { execSync, exec } from 'child_process';
 import * as fs from 'fs';
-import { changePackageJson, buildCppFile, initTsFile, initCppFile, initTsDeclearFile, packageJson } from './code';
+import { changePackageJson, wasmConfigFile, initTsFile, initCppFile, initTsDeclearFile, packageJson } from './code';
 import { prompt } from 'inquirer';
 import path from 'path';
 
@@ -71,7 +71,7 @@ export const writeCode = (prefixe?: string) => {
     fs.writeFileSync(joinPath('src', 'main.cpp'), initCppFile);
     fs.writeFileSync(joinPath('src', prefixe ? `${prefixe}index.ts` : 'index.ts'), initTsFile);
     fs.writeFileSync(joinPath('src', 'main.d.ts'), initTsDeclearFile);
-    fs.writeFileSync(joinPath('build-cpp.sh'), buildCppFile);
+    fs.writeFileSync(joinPath('wasm-ts.config.js'), wasmConfigFile);
 };
 
 type actionType = '新建wasm-node应用' | '修改现有vue应用' | '修改现有node应用';
